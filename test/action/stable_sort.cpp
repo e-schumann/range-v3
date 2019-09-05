@@ -24,17 +24,18 @@
 #include "../simple_test.hpp"
 #include "../test_utils.hpp"
 
+#if !defined(__clang__) || !defined(_MSVC_STL_VERSION) // Avoid #890
 void test_bug632()
 {
-	const std::vector<double> scores = { 3.0, 1.0, 2.0 };
-	std::vector<int> indices = { 0, 1, 2 };
+    const std::vector<double> scores = { 3.0, 1.0, 2.0 };
+    std::vector<int> indices = { 0, 1, 2 };
 
-	indices |= ranges::action::stable_sort(
-		ranges::less{},
-		[&] (const int &x) { return scores[ (std::size_t)x ]; }
-	);
+    indices |= ranges::actions::stable_sort(
+        ranges::less{},
+        [&] (const int &x) { return scores[ (std::size_t)x ]; }
+    );
 
-	::check_equal( indices, {1, 2, 0} );
+    ::check_equal( indices, {1, 2, 0} );
 }
 
 int main()
@@ -42,23 +43,23 @@ int main()
     using namespace ranges;
     std::mt19937 gen;
 
-    std::vector<int> v = view::ints(0,100);
-    v |= action::shuffle(gen);
+    auto v = views::ints(0,100) | to<std::vector>();
+    v |= actions::shuffle(gen);
     CHECK(!is_sorted(v));
 
-    auto v2 = v | copy | action::stable_sort;
+    auto v2 = v | copy | actions::stable_sort;
     CHECK(size(v2) == size(v));
     CHECK(is_sorted(v2));
     CHECK(!is_sorted(v));
-    ::models<concepts::Same>(v, v2);
+    CPP_assert(same_as<decltype(v), decltype(v2)>);
 
-    v |= action::stable_sort;
+    v |= actions::stable_sort;
     CHECK(is_sorted(v));
 
-    v |= action::shuffle(gen);
+    v |= actions::shuffle(gen);
     CHECK(!is_sorted(v));
 
-    v = v | move | action::stable_sort(std::less<int>());
+    v = v | move | actions::stable_sort(std::less<int>());
     CHECK(is_sorted(v));
     CHECK(equal(v, v2));
 
@@ -66,19 +67,22 @@ int main()
     // in which case they take and return by reference
     shuffle(v, gen);
     CHECK(!is_sorted(v));
-    auto & v3 = action::stable_sort(v);
+    auto & v3 = actions::stable_sort(v);
     CHECK(is_sorted(v));
     CHECK(&v3 == &v);
 
-    auto ref=std::ref(v);
-    ref |= action::stable_sort;
+    auto r = views::ref(v);
+    r |= actions::stable_sort;
 
     // Can pipe a view to a "container" algorithm.
-    action::stable_sort(v, std::greater<int>());
-    v | view::stride(2) | action::stable_sort;
-    check_equal(view::take(v, 10), {1,98,3,96,5,94,7,92,9,90});
+    actions::stable_sort(v, std::greater<int>());
+    v | views::stride(2) | actions::stable_sort;
+    check_equal(views::take(v, 10), {1,98,3,96,5,94,7,92,9,90});
 
     test_bug632();
 
     return ::test_result();
 }
+#else // Avoid #890
+int main() {}
+#endif // Avoid #890

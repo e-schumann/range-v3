@@ -7,7 +7,8 @@
                 "/usr/local/include",
                 "/Users/eniebler/llvm-install/lib/clang/6.0.0/include",
                 "/usr/include",
-                "${workspaceRoot}/include"
+                "${workspaceRoot}/include",
+                "/usr/local/opt/boost@1.67/incluse"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -17,7 +18,8 @@
                     "/usr/local/include",
                     "/Users/eniebler/llvm-install/lib/clang/6.0.0/include",
                     "/usr/include",
-                    "${workspaceRoot}/include"
+                    "${workspaceRoot}/include",
+                    "/usr/local/opt/boost@1.67/incluse"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -25,7 +27,11 @@
             "macFrameworkPath": [
                 "/System/Library/Frameworks",
                 "/Library/Frameworks"
-            ]
+            ],
+            "compilerPath": "/Users/eniebler/llvm-install/bin/clang++",
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "configurationProvider": "vector-of-bool.cmake-tools"
         },
         {
             "name": "Linux",
@@ -44,12 +50,13 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++11"
         },
         {
             "name": "Win32",
             "includePath": [
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
                 "${workspaceRoot}/include"
             ],
             "defines": [
@@ -59,13 +66,14 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
                     "${workspaceRoot}/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++11"
         }
     ],
-    "version": 3
+    "version": 4
 }

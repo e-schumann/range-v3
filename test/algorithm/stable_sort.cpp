@@ -35,18 +35,20 @@ namespace
 {
     std::mt19937 gen;
 
+#if !defined(__clang__) || !defined(_MSVC_STL_VERSION) // Avoid #890
     struct indirect_less
     {
         template<class P>
         bool operator()(const P& x, const P& y)
             {return *x < *y;}
     };
+#endif // Avoid #890
 
     template<class RI>
     void
     test_sort_helper(RI f, RI l)
     {
-        using value_type = ranges::value_type_t<RI>;
+        using value_type = ranges::iter_value_t<RI>;
         auto stable_sort = make_testable_1<false>(ranges::stable_sort);
         if (f != l)
         {
@@ -194,6 +196,7 @@ int main()
     test_larger_sorts(1000);
     test_larger_sorts(1009);
 
+#if !defined(__clang__) || !defined(_MSVC_STL_VERSION) // Avoid #890
     // Check move-only types
     {
         std::vector<std::unique_ptr<int> > v(1000);
@@ -220,7 +223,7 @@ int main()
         }
     }
 
-    // Check rvalue range
+    // Check rvalue container
     {
         std::vector<S> v(1000, S{});
         for(int i = 0; (std::size_t)i < v.size(); ++i)
@@ -228,13 +231,30 @@ int main()
             v[i].i = (int)v.size() - i - 1;
             v[i].j = i;
         }
-        CHECK(ranges::stable_sort(ranges::view::all(v), std::less<int>{}, &S::i).get_unsafe() == v.end());
+        CHECK(::is_dangling(ranges::stable_sort(std::move(v), std::less<int>{}, &S::i)));
         for(int i = 0; (std::size_t)i < v.size(); ++i)
         {
             CHECK(v[i].i == i);
             CHECK((std::size_t)v[i].j == v.size() - i - 1);
         }
     }
+
+    // Check rvalue forwarding range
+    {
+        std::vector<S> v(1000, S{});
+        for(int i = 0; (std::size_t)i < v.size(); ++i)
+        {
+            v[i].i = (int)v.size() - i - 1;
+            v[i].j = i;
+        }
+        CHECK(ranges::stable_sort(ranges::views::all(v), std::less<int>{}, &S::i) == v.end());
+        for(int i = 0; (std::size_t)i < v.size(); ++i)
+        {
+            CHECK(v[i].i == i);
+            CHECK((std::size_t)v[i].j == v.size() - i - 1);
+        }
+    }
+#endif // Avoid #890
 
     return ::test_result();
 }

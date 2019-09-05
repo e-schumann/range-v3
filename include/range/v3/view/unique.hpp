@@ -15,55 +15,51 @@
 #define RANGES_V3_VIEW_UNIQUE_HPP
 
 #include <utility>
+
 #include <meta/meta.hpp>
+
 #include <range/v3/range_fwd.hpp>
-#include <range/v3/utility/functional.hpp>
+
+#include <range/v3/functional/bind_back.hpp>
+#include <range/v3/functional/not_fn.hpp>
 #include <range/v3/utility/static_const.hpp>
 #include <range/v3/view/adjacent_filter.hpp>
-#include <range/v3/view/view.hpp>
 #include <range/v3/view/all.hpp>
+#include <range/v3/view/view.hpp>
 
 namespace ranges
 {
-    inline namespace v3
+    /// \addtogroup group-views
+    /// @{
+    namespace views
     {
-        /// \addtogroup group-views
-        /// @{
-        namespace view
+        struct unique_fn
         {
-            struct unique_fn
+        private:
+            friend view_access;
+            template<typename C>
+            static constexpr auto CPP_fun(bind)(unique_fn unique, C pred)( //
+                requires(!range<C>))
             {
-                template<typename Rng>
-                using Concept = meta::and_<
-                    ForwardRange<Rng>,
-                    EqualityComparable<range_value_type_t<Rng>>>;
+                return bind_back(unique, std::move(pred));
+            }
 
-                template<typename Rng, CONCEPT_REQUIRES_(Concept<Rng>())>
-                unique_view<all_t<Rng>> operator()(Rng && rng) const
-                {
-                    return {all(static_cast<Rng&&>(rng)), not_equal_to{}};
-                }
-            #ifndef RANGES_DOXYGEN_INVOKED
-                template<typename Rng,
-                    CONCEPT_REQUIRES_(!Concept<Rng>())>
-                void operator()(Rng &&) const
-                {
-                    CONCEPT_ASSERT_MSG(ForwardRange<Rng>(),
-                        "The object on which view::unique operates must be a model the "
-                        "ForwardRange concept.");
-                    CONCEPT_ASSERT_MSG(EqualityComparable<range_value_type_t<Rng>>(),
-                        "The value type of the range passed to view::unique must be "
-                        "EqualityComparable.");
-                }
-            #endif
-            };
+        public:
+            template<typename Rng, typename C = equal_to>
+            constexpr auto operator()(Rng && rng, C pred = {}) const
+                -> CPP_ret(adjacent_filter_view<all_t<Rng>, logical_negate<C>>)( //
+                    requires viewable_range<Rng> && forward_range<Rng> &&
+                        indirect_relation<C, iterator_t<Rng>>)
+            {
+                return {all(static_cast<Rng &&>(rng)), not_fn(pred)};
+            }
+        };
 
-            /// \relates unique_fn
-            /// \ingroup group-views
-            RANGES_INLINE_VARIABLE(view<unique_fn>, unique)
-        }
-        /// @}
-    }
-}
+        /// \relates unique_fn
+        /// \ingroup group-views
+        RANGES_INLINE_VARIABLE(view<unique_fn>, unique)
+    } // namespace views
+    /// @}
+} // namespace ranges
 
 #endif

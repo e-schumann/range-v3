@@ -1,4 +1,5 @@
+set(CMAKE_FOLDER "${CMAKE_FOLDER}/utility")
 
-add_executable(generator generator.cpp)
-target_link_libraries(generator range-v3)
-add_test(test.generator generator)
+if (RANGE_V3_COROUTINE_FLAGS)
+  rv3_add_test(test.generator generator generator.cpp)
+endif()
